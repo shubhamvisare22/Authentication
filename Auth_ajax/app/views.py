@@ -11,16 +11,20 @@ def login_view(request):
         return redirect('profile')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        try:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
 
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            response = {'status': 1}
-            return HttpResponse(json.dumps(response), content_type='application/json')
-        else:
-            return JsonResponse({'status': 0}, safe=False)
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                response = {'status': 1}
+                return HttpResponse(json.dumps(response), content_type='application/json')
+            else:
+                return JsonResponse({'status': 0}, safe=False)
+        except Exception as e:
+            return JsonResponse({'status': 0, 'error': str(e)}, safe=False)
 
     return render(request, 'login.html')
 
@@ -31,34 +35,39 @@ def register_view(request):
         return redirect('profile')
 
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        try:
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            username = request.POST.get('username')
+            password = request.POST.get('password')
 
-        if not User.objects.filter(username=username).exists():
-            user = User.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-            )
-            user.set_password(password)
-            user.save()
-            return JsonResponse({'status': 1})
-        else:
-            return JsonResponse({'status': 0})
+            if not User.objects.filter(username=username).exists():
+                user = User.objects.create(
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                )
+                user.set_password(password)
+                user.save()
+                return JsonResponse({'status': 1})
+            else:
+                return JsonResponse({'status': 0})
+        except Exception as e:
+            return JsonResponse({'status': 0, 'error': str(e)})
 
     return render(request, 'register.html')
 
 
 def logout_view(request):
     if request.method == 'POST':
-        logout(request)
-        return JsonResponse({'status': 1})
+        try:
+            logout(request)
+            return JsonResponse({'status': 1})
+        except Exception as e:
+            return JsonResponse({'status': 0, 'error': str(e)})
 
 
 def profile_view(request):
     if not request.user.is_authenticated:
         return redirect('login')
-
     return render(request, 'profile.html')
